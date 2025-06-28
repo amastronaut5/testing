@@ -1,31 +1,30 @@
-import axios from 'axios';
-const url = `${import.meta.env.VITE_REACT_APP_BACKEND_URL}api/`;
+import axios from "axios"
 
-export const signup = async(postData)=>{
-    try {
-        const response = await axios.post(url, postData, {
-            headers: {
-                "Content-Type": "application/json"
-            },
-        });
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Error creating post:', error);
-        throw error;
-    }
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_BACKEND_URL
+
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api/auth`,
+  headers: {
+    "Content-Type": "application/json",
+  },
+})
+
+export const signup = async (userData) => {
+  try {
+    const response = await api.post("/signup", userData)
+    return response.data
+  } catch (error) {
+    console.error("Signup error:", error)
+    throw error.response?.data || { message: "Signup failed" }
+  }
 }
-export const login = async(postData)=>{
-    try {
-        const response = await axios.post(url, postData, {
-            headers: {
-                "Content-Type": "application/json"
-            },
-        });
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Error creating post:', error);
-        throw error;
-    }
+
+export const login = async (userData) => {
+  try {
+    const response = await api.post("/login", userData)
+    return response.data
+  } catch (error) {
+    console.error("Login error:", error)
+    throw error.response?.data || { message: "Login failed" }
+  }
 }

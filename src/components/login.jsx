@@ -1,75 +1,130 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login } from "../api/index.js";
+"use client"
+
+import { useRef } from "react"
+import { useNavigate } from "react-router-dom"
+import { login } from "../api/index.js"
+import { useAuth } from "../hooks/useAuth.js"
+
 export default function Login() {
-  const navigate = useNavigate();
-  const usernameRef = useRef(null);
-  const emailRef = useRef(null);
-  const passwordRef = useRef(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const navigate = useNavigate()
+  const usernameRef = useRef(null)
+  const emailRef = useRef(null)
+  const passwordRef = useRef(null)
+  const { error, success, loading, setError, setSuccess, setLoading, validateForm, resetMessages } = useAuth()
 
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    resetMessages()
 
-  async function SubmitData(e) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    const username = usernameRef.current.value.trim();
-    const email = emailRef.current.value.trim();
-    const password = passwordRef.current.value;
-    if (!username || !email || !password) {
-      setError("Please fill all the fields.");
-      return;
+    const username = usernameRef.current.value.trim()
+    const email = emailRef.current.value.trim()
+    const password = passwordRef.current.value
+
+    const validationError = validateForm(username, email, password)
+    if (validationError) {
+      setError(validationError)
+      return
     }
-    if (username.length < 3) {
-      setError("Name must be at least 3 characters.");
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    const postData = {
-      username,
-      email,
-      password,
-    };
+
+    setLoading(true)
     try {
-      // const response = await login(postData);
-      setSuccess("Successfully logged in!");
+      // const response = await login({ username, email, password })
+      setSuccess("Successfully logged in!")
+
       setTimeout(() => {
-        setSuccess("");
-        navigate("/");
-      }, 1000);
+        navigate("/")
+      }, 1000)
     } catch (error) {
-      setError("An error occurred. Please try again.");
-      console.error(error);
+      setError(error.message || "Login failed. Please try again.")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md flex flex-col gap-6">
-        <h2 className="text-3xl font-bold text-center mb-2">Log In</h2>
-        {error && <div className="text-red-500 text-center mb-2">{error}</div>}
-        {success && <div className="text-green-600 text-center mb-2">{success}</div>}
-        <input ref={usernameRef} type="text" name="name" placeholder="Name" className="border rounded-lg px-4 py-2 focus:outline-none mb-4"/>
-        <input ref={emailRef} type="email" name="email" placeholder="Email" className="border rounded-lg px-4 py-2 focus:outline-none mb-4"/>
-        <input ref={passwordRef} type="password" name="password" placeholder="Password" className="border rounded-lg px-4 py-2 focus:outline-none mb-4"/>
-        <button onClick={SubmitData} className="bg-gray-900 text-white font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors duration-200 mt-2">
-            Log In
-        </button>
-        <div className="text-center text-sm text-gray-500 mt-4">
-          Don't have an account? <span onClick={()=>navigate("/signup")} className="text-blue-600 hover:underline cursor-pointer">Sign Up</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="bg-white p-8 rounded-2xl shadow-lg">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">Log In</h2>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4" role="alert">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg mb-4" role="alert">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Username
+              </label>
+              <input
+                ref={usernameRef}
+                id="username"
+                type="text"
+                required
+                placeholder="Username"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email
+              </label>
+              <input
+                ref={emailRef}
+                id="email"
+                type="email"
+                required
+                placeholder="Email"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                ref={passwordRef}
+                id="password"
+                type="password"
+                required
+                placeholder="Password"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gray-900 text-white font-semibold py-3 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Logging in..." : "Log In"}
+            </button>
+          </form>
+
+          <div className="text-center text-sm text-gray-500 mt-6">
+            Don't have an account?{" "}
+            <button
+              onClick={() => navigate("/signup")}
+              className="text-blue-600 hover:underline focus:outline-none focus:underline"
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
